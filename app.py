@@ -2,11 +2,13 @@ import streamlit as st
 import numpy as np
 import io
 import base64
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import tempfile
 import os
 from datetime import datetime
 import sys
+import soundfile as sf
+import sounddevice as sd
 
 # Audio processing imports with fallbacks
 try:
@@ -51,6 +53,46 @@ ATLAS_URI = "mongodb+srv://marmarpillsight:XE714yxuw5wVPpYz@marmar-pillsight.dfx
 DB_NAME = "marmar-pillsight"
 COLLECTION_NAME = "drug_forms"
 
+class AudioProcessor:
+    def __init__(self):
+        self.sample_rate = 16000
+        self.channels = 1
+        self.is_recording = False
+        self.audio_data = []
+        
+    def start_recording(self):
+        if not AUDIO_AVAILABLE:
+            st.error("Audio recording is not available in this environment")
+            return
+        
+        try:
+            self.is_recording = True
+            self.audio_data = sd.rec(
+                int(5 * self.sample_rate),  # 5 seconds max
+                samplerate=self.sample_rate,
+                channels=self.channels,
+                dtype='float32'
+            )
+        except Exception as e:
+            st.error(f"Could not start recording: {str(e)}")
+            self.is_recording = False
+    
+    def stop_recording(self) -> Optional[str]:
+        if not self.is_recording:
+            return None
+            
+        try:
+            sd.stop()
+            self.is_recording = False
+            
+            # Save to temporary file
+            temp_file = "temp_audio.wav"
+            sf.write(temp_file, self.audio_data, self.sample_rate)
+            return temp_file
+        except Exception as e:
+            st.error(f"Error saving audio: {str(e)}")
+            return None
+
 class PillSightApp:
     def __init__(self):
         self.setup_page_config()
@@ -58,6 +100,7 @@ class PillSightApp:
         self.initialize_database()
         self.conversational_ai = StreamlitConversationalInterface(self)
         self.audio_available = AUDIO_AVAILABLE
+        self.audio_processor = AudioProcessor() if AUDIO_AVAILABLE else None
         
     def setup_page_config(self):
         """Configure Streamlit page settings"""

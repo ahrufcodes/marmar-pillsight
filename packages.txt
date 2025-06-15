@@ -1,3 +1,6 @@
+python3-dev
 portaudio19-dev
-python3-pyaudio
-ffmpeg 
+libasound2-dev
+libsndfile1
+ffmpeg
+libavcodec-extra 
