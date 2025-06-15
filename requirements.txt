@@ -41,6 +41,5 @@ flake8==7.2.0
 # Audio processing
 sounddevice==0.4.6
 soundfile==0.12.1
-wave
 PyAudio>=0.2.11
 # Remove pyaudioop as it's part of Python standard library 
