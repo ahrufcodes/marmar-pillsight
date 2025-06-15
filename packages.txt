@@ -1,4 +1,2 @@
 python3-dev
-libasound2-dev
-libsndfile1
-ffmpeg 
+libsndfile1 

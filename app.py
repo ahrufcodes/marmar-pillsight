@@ -21,7 +21,6 @@ st.set_page_config(
 # Audio processing setup with better error handling
 AUDIO_AVAILABLE = False
 try:
-    import sounddevice as sd
     import soundfile as sf
     AUDIO_AVAILABLE = True
 except ImportError:
@@ -62,39 +61,21 @@ class AudioProcessor:
         self.sample_rate = 16000
         self.channels = 1
         self.is_recording = False
-        self.audio_data = []
+        self.audio_data = None
         
-    def start_recording(self):
+    def process_audio_file(self, audio_file) -> Optional[str]:
+        """Process uploaded audio file"""
         if not AUDIO_AVAILABLE:
-            st.error("Audio recording is not available in this environment")
-            return
-        
-        try:
-            self.is_recording = True
-            self.audio_data = sd.rec(
-                int(5 * self.sample_rate),  # 5 seconds max
-                samplerate=self.sample_rate,
-                channels=self.channels,
-                dtype='float32'
-            )
-        except Exception as e:
-            st.error(f"Could not start recording: {str(e)}")
-            self.is_recording = False
-    
-    def stop_recording(self) -> Optional[str]:
-        if not self.is_recording:
+            st.error("Audio processing is not available in this environment")
             return None
             
         try:
-            sd.stop()
-            self.is_recording = False
-            
-            # Save to temporary file
-            temp_file = "temp_audio.wav"
-            sf.write(temp_file, self.audio_data, self.sample_rate)
-            return temp_file
+            # Save uploaded file
+            with open("temp_audio.wav", "wb") as f:
+                f.write(audio_file.getbuffer())
+            return "temp_audio.wav"
         except Exception as e:
-            st.error(f"Error saving audio: {str(e)}")
+            st.error(f"Error processing audio: {str(e)}")
             return None
 
 class PillSightApp:
@@ -105,6 +86,7 @@ class PillSightApp:
         self.conversational_ai = StreamlitConversationalInterface(self)
         self.audio_available = AUDIO_AVAILABLE
         self.audio_processor = AudioProcessor() if AUDIO_AVAILABLE else None
+        self.initialize_session_state()
         
     def setup_page_config(self):
         """Configure Streamlit page settings"""
@@ -723,6 +705,13 @@ class PillSightApp:
             
         except Exception as e:
             st.error(f"Error fetching database stats: {e}")
+    
+    def initialize_session_state(self):
+        """Initialize session state variables"""
+        if 'conversation_history' not in st.session_state:
+            st.session_state.conversation_history = []
+        if 'conversation_active' not in st.session_state:
+            st.session_state.conversation_active = False
     
     def run(self):
         """Main application runner"""
