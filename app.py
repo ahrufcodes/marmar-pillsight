@@ -6,10 +6,20 @@ from typing import List, Dict, Any
 import tempfile
 import os
 from datetime import datetime
+import sys
 
-# Audio processing (lightweight)
-from pydub import AudioSegment
-import threading
+# Audio processing imports with fallbacks
+try:
+    import audioop
+except ImportError:
+    try:
+        import pyaudio
+        import wave
+        import soundfile as sf
+        AUDIO_AVAILABLE = True
+    except ImportError:
+        AUDIO_AVAILABLE = False
+        st.warning("Audio processing libraries not available. Voice features will be disabled.")
 
 # ML and embeddings
 from sentence_transformers import SentenceTransformer
@@ -47,6 +57,7 @@ class PillSightApp:
         self.initialize_models()
         self.initialize_database()
         self.conversational_ai = StreamlitConversationalInterface(self)
+        self.audio_available = AUDIO_AVAILABLE
         
     def setup_page_config(self):
         """Configure Streamlit page settings"""
@@ -259,7 +270,6 @@ class PillSightApp:
                     if audio_data is not None:
                         # Save audio data to temporary file
                         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
-                            import soundfile as sf
                             sf.write(tmp_file.name, audio_data, st.session_state.audio_processor.sample_rate)
                             
                             try:
