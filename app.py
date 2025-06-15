@@ -10,18 +10,22 @@ import sys
 import soundfile as sf
 import sounddevice as sd
 
-# Audio processing imports with fallbacks
+# Set page config first
+st.set_page_config(
+    page_title="MARMAR PillSight",
+    page_icon="💊",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Audio processing setup with better error handling
+AUDIO_AVAILABLE = False
 try:
-    import audioop
+    import sounddevice as sd
+    import soundfile as sf
+    AUDIO_AVAILABLE = True
 except ImportError:
-    try:
-        import pyaudio
-        import wave
-        import soundfile as sf
-        AUDIO_AVAILABLE = True
-    except ImportError:
-        AUDIO_AVAILABLE = False
-        st.warning("Audio processing libraries not available. Voice features will be disabled.")
+    st.warning("Audio processing libraries not available. Voice features will be disabled.")
 
 # ML and embeddings
 from sentence_transformers import SentenceTransformer
