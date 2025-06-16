@@ -90,12 +90,8 @@ class PillSightApp:
         
     def setup_page_config(self):
         """Configure Streamlit page settings"""
-        st.set_page_config(
-            page_title="🔍 MARMAR PillSight",
-            page_icon="💊",
-            layout="wide",
-            initial_sidebar_state="expanded"
-        )
+        # Page config is already set at the top level
+        pass
         
     @st.cache_resource
     def load_embedding_model(_self):
